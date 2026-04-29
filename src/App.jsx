@@ -1,45 +1,55 @@
 import { useState } from "react";
-import "./App.css";
+import { API_URL } from "./config";
 
 function App() {
   const [question, setQuestion] = useState("");
-  const [reply, setReply] = useState("");
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const askAI = async () => {
-    const res = await fetch("http://127.0.0.1:8000/ask", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ question }),
-    });
+  const askAI = async (question) => {
+    try {
+      const res = await fetch(`${API_URL}/ask`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question }),
+      });
 
-    const data = await res.json();
-    setReply(data.reply);
+      const data = await res.json();
+      return data.answer;
+
+    } catch (error) {
+      console.error(error);
+      return "Something went wrong 🙏";
+    }
+  };
+
+  const handleAsk = async () => {
+    if (!question) return;
+
+    setLoading(true);
+
+    const answer = await askAI(question);
+
+    setResponse(answer);
+    setLoading(false);
   };
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>🙏 Naman Darshan AI Assistant</h1>
+    <div style={{ padding: "40px" }}>
+      <h2>🙏 Naman Darshan AI</h2>
 
       <input
-        type="text"
-        placeholder="Ask about darshan..."
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
-        style={{
-          width: "400px",
-          padding: "10px",
-          marginRight: "10px",
-        }}
+        placeholder="Ask your question..."
       />
 
-      <button onClick={askAI}>Ask</button>
+      <button onClick={handleAsk}>Ask</button>
 
-      <div style={{ marginTop: "30px" }}>
-        <h3>Reply:</h3>
-        <p>{reply}</p>
-      </div>
+      {loading && <p>Thinking...</p>}
+      {response && <p>{response}</p>}
     </div>
   );
 }
